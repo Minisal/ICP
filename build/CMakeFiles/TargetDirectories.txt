@@ -1,0 +1,3 @@
+/Users/minisal/desktop/ICP-minisal/build/CMakeFiles/rebuild_cache.dir
+/Users/minisal/desktop/ICP-minisal/build/CMakeFiles/edit_cache.dir
+/Users/minisal/desktop/ICP-minisal/build/CMakeFiles/icp1_simple.dir
