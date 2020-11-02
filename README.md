@@ -19,15 +19,31 @@ output : rotation and translation of B to fit in A.
 - Exhaustive search method is used to find the nearest neighbor of each point.
 - Eigen library is used for matrices operations.
 - Use [The Stanford Bunny Models](https://graphics.stanford.edu/data/3Dscanrep/) as dataset. 
+- Use PCL 1.7 APIs to load datasets and visualize the PointClouds.
 
+#### Requirements
+- pcl > 1.7
+- cmake > 2.8
+
+#### Build
+<pre><code>
+mkdir build
+cd build 
+cmake ..
+make
+</code></pre>
+#### Run
+<pre><code>
+./icp1_simple ../data/bun{000,045}mesh.ply
+</code></pre>
 
 
 ## Extension and Variants in the Future
 
 #### Dataset
 
- - [ ] Import the real-world datasets. 
- - [ ] Visualize the datasets.
+ - [x] Import the real-world datasets. 
+ - [x] Visualize the datasets.
  - [ ] Visualize the iterative process.
 
 #### Point Subsets
