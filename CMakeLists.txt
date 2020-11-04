@@ -7,3 +7,6 @@ link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 add_executable(icp1_simple src/icp1_simple.cpp)
 target_link_libraries(icp1_simple ${PCL_LIBRARIES})
+
+add_executable(icp2_iterative_view src/icp2_iterative_view.cpp)
+target_link_libraries(icp2_iterative_view ${PCL_LIBRARIES})
