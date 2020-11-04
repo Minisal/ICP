@@ -26,15 +26,14 @@ output : rotation and translation of B to fit in A.
 - cmake > 2.8
 
 #### Build
-<pre><code>
-mkdir build
+<pre><code>mkdir build
 cd build 
 cmake ..
 make
 </code></pre>
 #### Run
-<pre><code>
-./icp1_simple ../data/bun{000,045}mesh.ply
+<pre><code>./icp1_simple ../data/bun{000,045}mesh.ply
+	./icp2_iterative_view ../data/bun{000,045}mesh.ply
 </code></pre>
 
 
@@ -43,8 +42,8 @@ make
 #### Dataset
 
  - [x] Import the real-world datasets. 
- - [x] Visualize the datasets.
- - [ ] Visualize the iterative process.
+ - [x] Visualize the datasets.(icp1_simple)
+ - [x] Visualize the iterative process.(icp2_iterative_view)
 
 #### Point Subsets
  - [ ] Random Sampling
