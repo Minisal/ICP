@@ -20,6 +20,7 @@ output : rotation and translation of B to fit in A.
 - Eigen library is used for matrices operations.
 - Use [The Stanford Bunny Models](https://graphics.stanford.edu/data/3Dscanrep/) as dataset. 
 - Use PCL 1.7 APIs to load datasets and visualize the PointClouds.
+- Use nanoflann to finish KNN search.
 
 #### Requirements
 - pcl > 1.7
@@ -34,6 +35,7 @@ make
 #### Run
 <pre><code>./icp1_simple ../data/bun{000,045}mesh.ply
 ./icp2_iterative_view ../data/bun{000,045}mesh.ply
+./icp3_with_normal ../data/bun{000,045}mesh.ply
 </code></pre>
 
 

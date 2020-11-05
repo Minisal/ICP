@@ -20,7 +20,7 @@ void addNormal(PointCloud<PointXYZ>::Ptr cloud,
 {
 	PointCloud<Normal>::Ptr normals (new PointCloud<Normal>);
 
-	search::KdTree<PointXYZ> searchTree (new search::KdTree<PointXYZ>);
+	pcl::search::KdTree<PointXYZ>::Ptr searchTree(new pcl::search::KdTree<PointXYZ>);
 	searchTree->setInputCloud(cloud);
 
 	NormalEstimation<PointXYZ,Normal> normalEstimator;
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
   
   	pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> source_trans_color ( cloud_source_trans, 255, 0, 255 );
   	viewer->addPointCloud<pcl::PointXYZ> ( cloud_source_trans, source_trans_color, "source trans" );
-  	visualizationiewer->setPointCloudRenderingProperties ( pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "source trans" );
+  	viewer->setPointCloudRenderingProperties ( pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "source trans" );
   
   
   	viewer->getRenderWindow()->GetRenderers()->GetFirstRenderer()->GetActiveCamera()->SetParallelProjection( 1 );
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
   	addNormal(cloud_source, cloud_source_normals);
   	addNormal(cloud_target, cloud_target_normals);
-  	addNormal(cloud_target_normals, cloud_source_trans_normals);
+  	addNormal(cloud_source_trans, cloud_source_trans_normals);
 
   	IterativeClosestPointWithNormals<PointXYZRGBNormal,PointXYZRGBNormal>::Ptr icp(new IterativeClosestPointWithNormals<PointXYZRGBNormal,PointXYZRGBNormal>);
   	icp->setMaximumIterations(1);
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
   		{
   			transformPointCloud(*cloud_source, *cloud_source_trans, icp->getFinalTransformation());
   			viewer->updatePointCloud(cloud_source_trans,source_trans_color,"source trans");
-  			cout<<icp->getFitnessScore<<endl;
+  			cout<<icp->getFitnessScore()<<endl;
   		}
   		else
   			cout<<"Not converged."<<endl;

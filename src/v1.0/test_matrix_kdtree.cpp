@@ -1,8 +1,8 @@
-#include <nanoflann.hpp>
+#include "nanoflann.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <ctime>
-#include <Eigen/Dense>
+#include "Eigen/Eigen"
 
 using namespace Eigen;
 using namespace std;
@@ -39,14 +39,14 @@ void kdtree_demo(const size_t nSamples, const size_t dim)
 	for (size_t d=0; d<dim; d++)
 		query_pt[d] = max_range*(rand()%1000)/num_t(1000);
 
-	typedef KDTreeEigenMatrixAdaptor<Matrix<num_t,Dynamic,Dynamic>> my_kd_tree_t;
+	typedef KDTreeEigenMatrixAdaptor<Matrix<num_t,Dynamic,Dynamic> > my_kd_tree_t;
 
 	my_kd_tree_t mat_index(dim, cref(mat), 10);
 	mat_index.index->buildIndex();
 
 	const size_t num_results = 3;
 	vector<size_t> ret_indexes(num_results);
-	vector<<num_t> out_dists_sqr(num_results);
+	vector<num_t> out_dists_sqr(num_results);
 
 	nanoflann::KNNResultSet<num_t> resultSet(num_results);
 

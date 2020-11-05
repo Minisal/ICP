@@ -10,3 +10,6 @@ target_link_libraries(icp1_simple ${PCL_LIBRARIES})
 
 add_executable(icp2_iterative_view src/icp2_iterative_view.cpp)
 target_link_libraries(icp2_iterative_view ${PCL_LIBRARIES})
+
+add_executable(icp3_with_normal src/icp3_with_normal.cpp)
+target_link_libraries(icp3_with_normal ${PCL_LIBRARIES})
