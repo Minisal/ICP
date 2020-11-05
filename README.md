@@ -54,7 +54,7 @@ make
  - [ ] Feature Detaction
 
 #### Data Association
- - [ ] Use KD-tree/OCtree to find the k-nearst neighbor of each point. 
+ - [x] Use KD-tree/OCtree to find the k-nearst neighbor of each point. 
  - [ ] Normal Shooting
  - [ ] Feature descriptor matching
 
