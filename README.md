@@ -33,7 +33,7 @@ make
 </code></pre>
 #### Run
 <pre><code>./icp1_simple ../data/bun{000,045}mesh.ply
-	./icp2_iterative_view ../data/bun{000,045}mesh.ply
+./icp2_iterative_view ../data/bun{000,045}mesh.ply
 </code></pre>
 
 
@@ -57,8 +57,8 @@ make
  - [ ] Feature descriptor matching
 
 #### Outlier Rejection
- - [ ] Remove correspondence with high distance for outlier rejection.
- - [ ] Remove worst x% of correspondences for outlier rejection.
+ - [x] Remove correspondence with high distance for outlier rejection.
+ - [x] Remove worst x% of correspondences for outlier rejection.
 
 #### Loss Function
  - [ ] Point-to-Plane
