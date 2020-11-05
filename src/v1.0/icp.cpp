@@ -33,6 +33,13 @@ typedef struct{
 	vector<int> indices;
 } NEIGHBOR;
 
+typedef struct{
+	int sourceIndex;
+	int targetIndex;
+	float distance;
+} Align;
+
+
 
 /*
 	Compute the distance between two 1*3 vector
@@ -59,6 +66,7 @@ float dist(const Vector3d &a, const Vector3d &b){
 						|...........|
 						[xn',yn',zn']
 						[xi',yi',zi'] is the nearest to [xi,yi,zi]
+		remainPercentage x = [0 ~ 100], remove worst (100-x)% of correspondence for outlier rejection. 
 	Output: 
 		T = [R, t]
 			R - rotation: 3*3 matrix
@@ -77,8 +85,8 @@ float dist(const Vector3d &a, const Vector3d &b){
 		R = U*Vt
 		t = controid_B-R*centroid_A
 */
-Matrix4d best_fit_transform(const MatrixXd &A,const MatrixXd &B){
-	int row = A.rows();
+Matrix4d best_fit_transform(const MatrixXd &A,const MatrixXd &B,int remainPercentage=100){
+	int row = (int) A.rows()*remainPercentage/100;
 	Vector3d centroid_A(0,0,0);
 	Vector3d centroid_B(0,0,0);
 	MatrixXd AA = A;
@@ -180,6 +188,68 @@ NEIGHBOR nearest_neighbor(const MatrixXd &src, const MatrixXd &dst){
 }
 
 
+int cmpAlign(const void *a, const void *b)
+{
+	Align *a1 = (Align*)a;
+	Align *a2 = (Align*)b;
+	return (*a1).distance - (*a2).distance;
+}
+
+/* 
+	#TODO change to KNN
+	Input: 
+		source        = [x1,y1,z1]
+						|x2,y2,z2|
+						|........|
+						[xn,yn,zn]
+
+		destination   = [x1,y1,z1]
+						|x2,y2,z2|
+						|........|
+						[xn,yn,zn]
+		threshold : remove correspondence with distance higher than threshold for outlier rejection.
+
+	Output: 
+		vector<Align> sorted by distance from smallest to largest
+		
+*/
+vector<Align> best_alignment(const MatrixXd& source, const MatrixXd& target, float threshold=100)
+{
+	int SourceRow = source.rows();
+	int targetRow = target.rows();
+	Vector3d sourceVector;
+	Vector3d targetVector;
+	vector<Align> alignments;
+	float minDistance = threshold; // initial to threshould
+	int tempIndex = 0;
+	float tempDistance = 0;
+
+	for(int i=0; i<SourceRowr; i++){
+		sourceVector = source.block<1,3>(i,0).transpose();
+		minDistance = threshold;
+		tempIndex = 0;
+		tempDistance = 0;
+		for(int j=0; j<targetRow; j++){
+			targetVector = target.block<1,3>(j,0).transpose();
+			tempDistance = dist(sourceVector,targetVector);
+			if(tempDistance < minDistance){ // find the nearst
+				minDistance = tempDistance;
+				tempIndex = j;
+			}
+		}
+		Align align; 
+		align.sourceIndex=i;
+		align.targetIndex=tempIndex;
+		align.distance=minDistance;
+		alignments.push_back(align);
+	}
+
+	qsort(alignments,alignments.size(),sizeof(align),cmpAlign);
+	return alignments;
+}
+
+
+
 /*
 	#TODO the rows of A is not equal to B
 	iterative closest point algorithm
@@ -220,14 +290,15 @@ NEIGHBOR nearest_neighbor(const MatrixXd &src, const MatrixXd &dst){
 
 */
 ICP_OUT icp(const MatrixXd &A, const MatrixXd &B, 
-			int max_iteration, float tolerance){
+			int max_iteration, float tolerance, float outlierThreshold=100){
 	
 	int row = A.rows();
 	MatrixXd src = MatrixXd::Ones(3+1,row); 
 	MatrixXd src3d = MatrixXd::Ones(3,row); 
 	MatrixXd dst = MatrixXd::Ones(3+1,row); 
 	MatrixXd dst_chorder = MatrixXd::Ones(3,row); 
-	NEIGHBOR neighbor;
+	//NEIGHBOR neighbor;
+	vector<Align> alignments;
 	Matrix4d T;
 	ICP_OUT result;
 	int iter = 1;
@@ -241,33 +312,46 @@ ICP_OUT icp(const MatrixXd &A, const MatrixXd &B,
 	double prev_error = 0;
 	double mean_error = 0;
 	for(int i=0; i<max_iteration; i++,iter=i+1){ // When the number of iterations is less than the maximum
-		neighbor = nearest_neighbor(src3d.transpose(),B); // n*3 , n*3
+		//neighbor = nearest_neighbor(src3d.transpose(),B); // n*3 , n*3
+		alignments = best_alignment(src3d.transpose(),B, outlierThreshold); // n*3, n*3
 
+/*
 		for(int j=0; j<row; j++){
 			dst_chorder.block<3,1>(0,j) = dst.block<3,1>(0,neighbor.indices[j]);
 			// save the nearst node' index to node i
 		}
+*/
+        //T = best_fit_transform(src3d.transpose(),dst_chorder.transpose()); // save the transformation in this iteration
 
-        T = best_fit_transform(src3d.transpose(),dst_chorder.transpose()); // save the transformation in this iteration
-
+        T = best_fit_transform(src3d.transpose(),dst.transpose(),alignments); // save the transformation in this iteration
 		src = T*src; // notice the order of matrix product
 
 		for(int j=0; j<row; j++){
 			src3d.block<3,1>(0,j) = src.block<3,1>(0,j); // copy the transformed matrix
 		}
 
-		mean_error = accumulate(neighbor.distances.begin(),
-							    neighbor.distances.end(),0.0)
-								/neighbor.distances.size();
+		//mean_error = accumulate(neighbor.distances.begin(),neighbor.distances.end(),0.0)/neighbor.distances.size();
+
+
+		mean_error = 0.0f;
+		for(auto align : alignments){
+			mean_error += align.distance;
+		}
+		mean_error /= alignments.size();
+
 		if(abs(prev_error-mean_error)<tolerance){
 			break;
 		}
 		
 		prev_error = mean_error;
 	}
+	vector<float> distances;
+	for(auto align : alignments){
+		distances.push_back(align.distance);
+	}
 	
 	result.trans = best_fit_transform(A,src3d.transpose()); // compute the total transforamtion for all iterations
-	result.distances = neighbor.distances;
+	result.distances = distances;
 	result.iter = iter;
 	return result;
 }
