@@ -182,13 +182,11 @@ void test_icp(void)
 
 		B += MatrixXd::Random(NUM_Points,3)*NOISE_SIGMA;
 		matrix_random_shuffle(B);
-
 		start = GetTickCount();
 		icp_result = icp(A,B,MAX_iteration,TOLENRANCE);
 		end = GetTickCount();
 		interval = float((end-start))/1000;
 		total_time += interval;
-
 		T = icp_result.trans;
 		dist = icp_result.distances;
 		iter = icp_result.iter;
