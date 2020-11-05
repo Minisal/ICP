@@ -14,14 +14,15 @@ using namespace Eigen;
 #define MAX_Translation 0.1 // max translation of the target points
 #define MAX_Rotation 0.1    // max rotation (radians) of the target points
 #define MAX_iteration 20
-#define TOLENRANCE 0.04
+#define TOLENRANCE 0.04     // the tolenrance of distance mean error
 
 
 /*
 	Return a random float variable with a value of 0 to 1.
 	Three decimal places.
 */
-float random_float(void){
+float random_float(void)
+{
 	float f = rand()%100;
 	return f/1000;
 }
@@ -31,16 +32,16 @@ float random_float(void){
 	Input : a n*3 matrix
 	Output : a n*3 matrix with diffenrent order of 3D vectors 
 */
-void matrix_random_shuffle(MatrixXd &matrix){
+void matrix_random_shuffle(MatrixXd &matrix)
+{
 	int row = matrix.rows();
 	vector<Vector3d> temp;
-	for(int jj=0;jj<row;jj++){
+	for(int jj=0;jj<row;jj++)
 		temp.push_back(matrix.block<1,3>(jj,0));
-	}
 	random_shuffle(temp.begin(),temp.end());
-	for(int jj=0;jj<row;jj++){
+	for(int jj=0;jj<row;jj++)
 		matrix.block<1,3>(jj,0)=temp[jj].transpose(); 
-	}
+
 }
 
 
@@ -51,7 +52,8 @@ void matrix_random_shuffle(MatrixXd &matrix){
 	Output : 
 		R - 3x3 rotation matrix
 */
-Matrix3d rotation_matrix_genaration(Vector3d axis, float theta){
+Matrix3d rotation_matrix_genaration(Vector3d axis, float theta)
+{
 	AngleAxisd rotationVector(theta, axis.normalized());
 	Matrix3d R = Matrix3d::Identity();
 	R = rotationVector.toRotationMatrix();
@@ -74,12 +76,12 @@ Matrix3d rotation_matrix_genaration(Vector3d axis, float theta){
 }
 
 
-
 /*
 	Return the number of millisecondes 
 	elapsed from Epoch to calling this function.
 */
-unsigned GetTickCount(){
+unsigned GetTickCount()
+{
 /*
 	struct timeval
 	{
@@ -95,15 +97,16 @@ unsigned GetTickCount(){
 
 
 /*
-	#TODO : import the real dataset
+	#TODO : import the pcl
 */
-void test_best_fit(void){
+void test_best_fit(void)
+{
 	MatrixXd A = MatrixXd::Random(NUM_Points,3); // src
-	MatrixXd B; // dst = src*[R t]
-	MatrixXd C; // src*[R1 t1]
-	Vector3d t; // <= random value
+	MatrixXd B;  // dst = src*[R t]
+	MatrixXd C;  // src*[R1 t1]
+	Vector3d t;  // <= random value
 	Matrix3d R;
-	Matrix4d T; // =[R1 t1]
+	Matrix4d T;  // =[R1 t1]
 	Vector3d t1; // <= computed from best-fit
 	Matrix3d R1;
 
@@ -111,14 +114,14 @@ void test_best_fit(void){
 	unsigned start, end;
 	float interval;
 
-	for(int i=0; i<NUM_Tests; i++){
+	for(int i=0; i<NUM_Tests; i++)
+	{
 		B = A;
 
 		// add random translation
 		t = Vector3d::Random()*MAX_Translation;
-		for(int jj=0; jj<NUM_Points; jj++){
+		for(int jj=0; jj<NUM_Points; jj++)
 			B.block<1,3>(jj,0) = B.block<1,3>(jj,0)+t.transpose();
-		}
 		// add random rotation
 		R = rotation_matrix_genaration(Vector3d::Random(), random_float()*MAX_Rotation);
 		B = B*R;
@@ -142,7 +145,7 @@ void test_best_fit(void){
 		cout<<"position error"<<endl<<C.block<NUM_Points,3>(0,0)-B<<endl<<endl;
 		cout<<"trans error"<<endl<<t1-t<<endl<<endl;
 		cout<<"R error"<<endl<<R1-R<<endl<<endl;
-		cout<<"---------------------------------"<<endl;
+		cout<<"------------------------------------------"<<endl;
 
 	}
 	cout<<"average fit time:"<<total_time/NUM_Tests<<endl;
@@ -150,10 +153,8 @@ void test_best_fit(void){
 }
 
 
-/*
-	#TODO : import the real dataset
-*/
-void test_icp(void){
+void test_icp(void)
+{
 	MatrixXd A = MatrixXd::Random(NUM_Points,3);
 	MatrixXd B;
 	MatrixXd C;
@@ -170,12 +171,12 @@ void test_icp(void){
 	unsigned start, end;
 	float interval;
 
-	for(int i=0; i<NUM_Tests; i++){
+	for(int i=0; i<NUM_Tests; i++)
+	{
 		B = A;
 		t = Vector3d::Random()*MAX_Translation;
-		for(int jj=0; jj<NUM_Points; jj++){
+		for(int jj=0; jj<NUM_Points; jj++)
 			B.block<1,3>(jj,0) = B.block<1,3>(jj,0) + t.transpose();
-		}
 		R = rotation_matrix_genaration(Vector3d::Random(), random_float()*MAX_Rotation);
 		B = (R*B.transpose()).transpose();
 
@@ -197,7 +198,6 @@ void test_icp(void){
 		C = C*T.transpose();
 		R1 = T.block<3,3>(0,0);
 		t1 = T.block<3,1>(0,3);
-		
 
 		cout<<"ICP_TEST"<<i<<":"<<endl;
 		cout<<"mean error"<<endl<<mean-6*NOISE_SIGMA<<endl<<endl;//????
