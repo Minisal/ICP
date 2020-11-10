@@ -34,9 +34,9 @@ make
 
 #### Result
 The following are results after 1, 6 and 12 iterations.
-![1_iteration](https://github.com/Minisal/ICP/raw/master/result/1_iteration.png)
-![6_iteration](https://github.com/Minisal/ICP/raw/master/result/6_iteration.png)
-![12_iteration](https://github.com/Minisal/ICP/raw/master/result/12_iteration.png)
+![1_iteration](https://github.com/Minisal/ICP/raw/main/result/1_iteration.png)
+![6_iteration](https://github.com/Minisal/ICP/raw/main/result/6_iteration.png)
+![12_iteration](https://github.com/Minisal/ICP/raw/main/result/12_iteration.png)
 
 ## Extension and Variants in the Future
 
