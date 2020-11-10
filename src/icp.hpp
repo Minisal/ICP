@@ -1,7 +1,9 @@
+
 #include <iostream>
 #include <numeric>
 #include "Eigen/Eigen"
 #include "nanoflann.hpp"
+
 using namespace std;
 using namespace Eigen;
 using namespace nanoflann;
@@ -94,12 +96,12 @@ float dist(const Vector3d &a, const Vector3d &b){
 						|x2',y2',z2'|
 						|...........|
 						[xn',yn',zn']
-						[xi',yi',zi'] is the nearest to [xi,yi,zi]
+					  # [xi',yi',zi'] is the nearest to [xi,yi,zi]
 		
 	Output: 
 		T = [R, t]
-			R - rotation: 3*3 matrix
-			t - tranlation: 3*1 vector
+			 R - rotation: 3*3 matrix
+			 t - tranlation: 3*1 vector
 
 	"best align" equals to find the min value of 
 					sum((bi-R*ai-t)^2)/N, i:=1~N
@@ -116,13 +118,18 @@ float dist(const Vector3d &a, const Vector3d &b){
 */
 Matrix4d best_fit_transform(const MatrixXd &A,const MatrixXd &B)
 {
-	int row = (int) A.rows();
+	size_t row = min(A.rows(),B.rows());
+
 	Vector3d centroid_A(0,0,0);
 	Vector3d centroid_B(0,0,0);
-	MatrixXd AA = A;
-	MatrixXd BB = B;
-	Matrix4d T = MatrixXd::Identity(4,4);
 	
+	MatrixXd AA;
+	MatrixXd BB;
+	if(A.rows()>B.rows()) AA = BB = B;
+	else BB = AA = A;
+
+	Matrix4d T = MatrixXd::Identity(4,4);
+
 	for(int i=0; i<row; i++)
 	{
 		centroid_A += A.block<1,3>(i,0).transpose();
@@ -146,7 +153,6 @@ Matrix4d best_fit_transform(const MatrixXd &A,const MatrixXd &B)
 	Matrix3d R;
 	Vector3d t;
 	
-    
 	JacobiSVD<MatrixXd> svd(H, ComputeFullU | ComputeFullV);
 	// JacobiSVD decomposition computes only the singular values by default. 
 	// ComputeFullU or ComputeFullV : ask for U or V explicitly.
@@ -170,10 +176,11 @@ Matrix4d best_fit_transform(const MatrixXd &A,const MatrixXd &B)
 	return T;
 }
 /*
-	Input : n*3 n*4
-    	neighbors : Indexes and distances of k closest points match.
-		remainPercentage x = [0 ~ 100] : Remove worst (100-x)% 
-	   		of correspondence for outlier rejection. 
+	Input : A : n*3 matrix
+			B : n*3 matrix
+    	    neighbors : Indexes and distances of k closest points match.
+		    remainPercentage x = [0 ~ 100] : Remove worst (100-x)% of 
+		    					correspondence for outlier rejection. 
 */
 Matrix4d best_fit_transform(const MatrixXd &A,const MatrixXd &B, 
 							vector<KNeighbor> neighbors,int remainPercentage=100,int K=5)
@@ -245,9 +252,7 @@ Matrix4d best_fit_transform(const MatrixXd &A,const MatrixXd &B,
 	return T;
 }
 
-
 /* 
-	#TODO change to KNN
 	Input: 
 		source        = [x1,y1,z1]
 						|x2,y2,z2|
@@ -302,19 +307,16 @@ vector<Align> best_alignment(const MatrixXd& source, const MatrixXd& target, flo
 	return alignments;
 }
 
-vector<KNeighbor> k_nearest_neighbors(const MatrixXd& source, const MatrixXd& target, float threshold=100, int K=5)
+vector<KNeighbor> k_nearest_neighbors(const MatrixXd& source, const MatrixXd& target, float leaf_size=10, int K=5)
 {
-	// #TODO threshold?????
 	int dimension = 3;
 	int SourceRow = source.rows();
 	int targetRow = target.rows();
 	Vector3d sourceVector;
 	Vector3d targetVector;
 	vector<KNeighbor> neighbors;
-	float minDistance = threshold; // initial to threshould
 	int tempIndex = 0;
 	float tempDistance = 0;
-
 
 	// build kdtree
 	Matrix<float,Dynamic,Dynamic> targetMatrix(targetRow,dimension);
@@ -322,7 +324,7 @@ vector<KNeighbor> k_nearest_neighbors(const MatrixXd& source, const MatrixXd& ta
 		for(int d=0;d<dimension;d++)
 			targetMatrix(i,d)=target(i,d);
 	typedef KDTreeEigenMatrixAdaptor<Matrix<float,Dynamic,Dynamic> > kdtree_t;
-	kdtree_t targetKDtree(dimension, cref(targetMatrix),threshold);
+	kdtree_t targetKDtree(dimension, cref(targetMatrix),leaf_size);
 	targetKDtree.index->buildIndex();
 
 	for(int i=0; i<SourceRow; i++)
@@ -337,7 +339,8 @@ vector<KNeighbor> k_nearest_neighbors(const MatrixXd& source, const MatrixXd& ta
 		vector<float> result_distances(K);
 		nanoflann::KNNResultSet<float> resultSet(K);
 		resultSet.init(&result_indexes[0],&result_distances[0]);
-		targetKDtree.index->findNeighbors(resultSet,&sourcePoint[0],nanoflann::SearchParams(threshold));
+		nanoflann::SearchParams params_igonored;
+		targetKDtree.index->findNeighbors(resultSet,&sourcePoint[0],params_igonored);
 
 		KNeighbor neigh;
 		neigh.sourceIndex=i;
@@ -357,7 +360,6 @@ vector<KNeighbor> k_nearest_neighbors(const MatrixXd& source, const MatrixXd& ta
 
 
 /*
-	#TODO the rows of A is not equal to B
 	iterative closest point algorithm
 
 	Input: 
@@ -365,6 +367,7 @@ vector<KNeighbor> k_nearest_neighbors(const MatrixXd& source, const MatrixXd& ta
 		destination B = {b1,...,bn}, bi = [x,y,z]
 		max_iteration
 		tolenrance
+		outlierThreshold
 	Output: 
 		ICP_OUT->
 			trans : transformation for best align
@@ -393,55 +396,66 @@ vector<KNeighbor> k_nearest_neighbors(const MatrixXd& source, const MatrixXd& ta
 		* src3d : save the temp matrix transformed in this iteration
 */
 ICP_OUT icp(const MatrixXd &A, const MatrixXd &B, 
-			int max_iteration, float tolerance, float outlierThreshold=100)
+			int max_iteration, float tolerance, int leaf_size=10, int Ksearch=5)
 {
-	int row = A.rows();
+	size_t row = min(A.rows(),B.rows());
 	MatrixXd src = MatrixXd::Ones(3+1,row); 
 	MatrixXd src3d = MatrixXd::Ones(3,row); 
 	MatrixXd dst = MatrixXd::Ones(3+1,row); 
-	//NEIGHBOR neighbor;
-	vector<KNeighbor> neighbors;
-	Matrix4d T;
+	MatrixXd dst3d = MatrixXd::Ones(3,row);
+    vector<KNeighbor> neighbors;
+	Align alignments;
+  	Matrix4d T;
+  	Matrix4d T_all = MatrixXd::Identity(4,4);
 	ICP_OUT result;
-	int iter = 1;
+	int iter;
 
 	for(int i=0; i<row; i++)
 	{
-		src.block<3,1>(0,i) = A.block<1,3>(i,0).transpose(); // line 4 for t,translate
+		src.block<3,1>(0,i) = A.block<1,3>(i,0).transpose(); // line 4 for t:translate
 		src3d.block<3,1>(0,i) = A.block<1,3>(i,0).transpose(); // save the temp data
 		dst.block<3,1>(0,i) = B.block<1,3>(i,0).transpose();
+		dst3d.block<3,1>(0,i) = B.block<1,3>(i,0).transpose();
 	}
 
 	double prev_error = 0;
 	double mean_error = 0;
 
-	for(int i=0; i<max_iteration; i++,iter=i+1){ // When the number of iterations is less than the maximum
-		neighbors = k_nearest_neighbors(src3d.transpose(),B,outlierThreshold); // n*3,n*3
+	// When the number of iterations is less than the maximum
+	for(iter=0; iter<max_iteration; iter++)
+	{ 
+		neighbors = k_nearest_neighbors(src3d.transpose(),B); // n*3,n*3
 
-		// save the transformation in this iteration
-		T = best_fit_transform(src3d.transpose(),dst.transpose(),neighbors,outlierThreshold);
+		// save the transformed matrix in this iteration
+		T = best_fit_transform(src3d.transpose(),dst.transpose(),neighbors);
+		T_all = T*T_all;
 		src = T*src; // notice the order of matrix product
 
+		// copy the transformed matrix
 		for(int j=0; j<row; j++)
-			src3d.block<3,1>(0,j) = src.block<3,1>(0,j); // copy the transformed matrix
+			src3d.block<3,1>(0,j) = src.block<3,1>(0,j); 
 
+
+		// calculate the mean error
 		mean_error = 0.0f;
 		for(int i=0; i<neighbors.size(); i++)
 			mean_error += neighbors[i].distanceMean;
 		mean_error /= neighbors.size();
-
+		cout<<"error"<<prev_error-mean_error<<endl;
 		if(abs(prev_error-mean_error)<tolerance)
 			break;
 	
 		prev_error = mean_error;
 	}
+
 	vector<float> distances;
 	for(int i=0; i<neighbors.size(); i++)
 		distances.push_back(neighbors[i].distanceMean);
 
-	result.trans = best_fit_transform(A,src3d.transpose()); // compute the total transforamtion for all iterations
+	result.trans = T_all;
 	result.distances = distances;
-	result.iter = iter;
+	result.iter = iter+1;
+
 	return result;
 }
 
