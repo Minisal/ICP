@@ -5,11 +5,6 @@ find_package(PCL 1.7 REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
-add_executable(icp1_simple src/icp1_simple.cpp)
-target_link_libraries(icp1_simple ${PCL_LIBRARIES})
 
-add_executable(icp2_iterative_view src/icp2_iterative_view.cpp)
-target_link_libraries(icp2_iterative_view ${PCL_LIBRARIES})
-
-add_executable(icp3_with_normal src/icp3_with_normal.cpp)
-target_link_libraries(icp3_with_normal ${PCL_LIBRARIES})
+#add_executable(icp_simple src/icp_simple.cpp)
+#target_link_libraries(icp_simple ${PCL_LIBRARIES})

@@ -1,19 +1,3 @@
-This folder contains the [standford bunny data](http://graphics.stanford.edu/data/3Dscanrep/) (bun000.ply, bun045.ply)
-
-Note: The pcl::io::loadPolygonFile() can not load the original bun{000,045}.ply files bacause the face element does not exist. Hence use meshlab to add face element.
-
-bun000mesh.ply and bun045mesh.ply are created by
-- reading the ply file by meshlab, and
-- exporting the mesh into another ply file by meshlab 
-	1. select "File"->"Export Mesh As..." then 
-	2. choose options "Vert: Flags, Normal" and "Face: Flags") 
-
-
-
-
-
-
-
 ### DATA INSTRUCTION
 
 			      Range Data
@@ -34,3 +18,5 @@ Laboratory:
 
 	http://www-graphics.stanford.edu
 
+
+This floder contains the [standford bunny data](http://graphics.stanford.edu/data/3Dscanrep/) ( bun000.ply, bun045.ply )
