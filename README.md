@@ -14,16 +14,13 @@ output : rotation and translation of B to fit in A.
 4. Recalculate matching points.
 5. Iterate until the number of iterations > threshold or the value of the minimized energy function < threshold.
 
-### Project Instruction
+## Project Instruction
 - SVD-based least squares best-fitting algorithm is used for the corresponding point set. (Point-to-Point)
-- Knn search method in nanoflann is used to find the k nearest neighbor of each point.
+- Eigen library is used for matrix operstions.
+- Knn search method in nanoflann is used to find the nearest neighbor of each point.
 - Eigen library is used for matrices operations.
 - Use [The Stanford Bunny Models](https://graphics.stanford.edu/data/3Dscanrep/) as dataset. 
 - Use PCL 1.7 APIs to load datasets and visualize the PointClouds.
-
-#### Requirements
-- pcl > 1.7
-- cmake > 2.8
 
 #### Build
 <pre><code>mkdir build
@@ -32,19 +29,22 @@ cmake ..
 make
 </code></pre>
 #### Run
-<pre><code>./icp1_simple ../data/bun{000,045}mesh.ply
-./icp2_iterative_view ../data/bun{000,045}mesh.ply
-./icp3_with_normal ../data/bun{000,045}mesh.ply
+<pre><code>./icp_simple ../data/bun{000,045}.ply 
 </code></pre>
 
+#### Result
+The following are results after 1, 6 and 12 iterations.
+![1_iteration](https://github.com/Minisal/ICP/raw/master/result/1_iteration.png)
+![6_iteration](https://github.com/Minisal/ICP/raw/master/result/6_iteration.png)
+![12_iteration](https://github.com/Minisal/ICP/raw/master/result/12_iteration.png)
 
 ## Extension and Variants in the Future
 
 #### Dataset
 
  - [x] Import the real-world datasets. 
- - [x] Visualize the datasets.(icp1_simple)
- - [x] Visualize the iterative process.(icp2_iterative_view)
+ - [x] Visualize the datasets.
+ - [ ] Visualize the iterative process.
 
 #### Point Subsets
  - [ ] Random Sampling
@@ -53,13 +53,13 @@ make
  - [ ] Feature Detaction
 
 #### Data Association
- - [x] Use KD-tree/OCtree to find the k-nearst neighbor of each point. 
+ - [x] Use KD-tree/OCtree to find the nearst neighbor of each point. 
  - [ ] Normal Shooting
  - [ ] Feature descriptor matching
 
 #### Outlier Rejection
- - [x] Remove correspondence with high distance for outlier rejection.
- - [x] Remove worst x% of correspondences for outlier rejection.
+ - [ ] Remove correspondence with high distance for outlier rejection.
+ - [ ] Remove worst x% of correspondences for outlier rejection.
 
 #### Loss Function
  - [ ] Point-to-Plane
